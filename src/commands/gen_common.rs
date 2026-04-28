@@ -1,4 +1,4 @@
-use crate::generate;
+use crate::generate::rust;
 use anyhow::Result;
 use clap::Parser;
 use std::{fs, path::PathBuf};
@@ -12,7 +12,7 @@ pub struct GenCommon {
 }
 
 pub fn gen_common(args: GenCommon) -> Result<()> {
-    fs::write(&args.output, generate::COMMON_MODULE)?;
+    fs::write(&args.output, rust::COMMON_MODULE)?;
 
     Ok(())
 }

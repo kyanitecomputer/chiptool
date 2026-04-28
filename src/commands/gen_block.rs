@@ -1,6 +1,6 @@
 use crate::{
-    commands::{get_generate_opts, GenerateShared},
-    generate,
+    commands::{get_generate_opts, GenerateShared, RustArch},
+    generate::rust,
     ir::IR,
 };
 
@@ -20,6 +20,9 @@ pub struct GenBlock {
     pub output: PathBuf,
     #[clap(flatten)]
     pub gen_shared: GenerateShared,
+    /// Target CPU architecture (cortex-m or riscv).
+    #[clap(long, value_enum, default_value = "cortex-m")]
+    pub arch: RustArch,
 }
 
 pub fn gen_block(args: GenBlock) -> Result<()> {
@@ -42,13 +45,10 @@ pub fn gen_block(args: GenBlock) -> Result<()> {
     }
 
     crate::transform::expand_extends::ExpandExtends {}.run(&mut ir)?;
-
-    // Ensure consistent sort order in the YAML.
     crate::transform::sort::Sort {}.run(&mut ir)?;
 
-    let generate_opts = get_generate_opts(args.gen_shared)?;
-
-    let items = generate::render(&ir, &generate_opts)?;
+    let generate_opts = get_generate_opts(args.gen_shared, args.arch)?;
+    let items = rust::render(&ir, &generate_opts)?;
     fs::write(&args.output, items.to_string())?;
 
     Ok(())

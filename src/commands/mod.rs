@@ -6,7 +6,7 @@ use crate::svd2ir::{namespace_names, NamespaceMode};
 use crate::{ir::IR, svd2ir};
 
 use anyhow::{bail, Context, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use log::*;
 use std::fs;
 use std::io::Read;
@@ -21,6 +21,28 @@ pub mod gen_block;
 pub mod gen_common;
 pub mod generate;
 pub mod transform;
+
+/// Target CPU architecture for Rust code generation.
+///
+/// Only meaningful when `--language rust` is selected (the default).
+/// Determines which interrupt-number trait and vector-table format are emitted.
+#[derive(Clone, Debug, Default, ValueEnum)]
+pub enum RustArch {
+    /// ARM Cortex-M (cortex_m / cortex_m_rt, NVIC vector table)
+    #[default]
+    CortexM,
+    /// RISC-V (riscv / riscv_rt, PLIC external interrupt handlers)
+    RiscV,
+}
+
+impl From<RustArch> for crate::generate::RustArch {
+    fn from(a: RustArch) -> Self {
+        match a {
+            RustArch::CortexM => crate::generate::RustArch::CortexM,
+            RustArch::RiscV => crate::generate::RustArch::RiscV,
+        }
+    }
+}
 
 /// Common arguments for all commands that perform code generation.
 #[derive(Parser)]
@@ -171,7 +193,7 @@ impl std::str::FromStr for ModulePath {
     }
 }
 
-fn get_generate_opts(args: GenerateShared) -> Result<crate::generate::Options> {
+fn get_generate_opts(args: GenerateShared, arch: RustArch) -> Result<crate::generate::Options> {
     let common_module = match args.common_module {
         None => crate::generate::CommonModule::Builtin,
         Some(module) => crate::generate::CommonModule::External(module.tokens()),
@@ -187,6 +209,7 @@ fn get_generate_opts(args: GenerateShared) -> Result<crate::generate::Options> {
     let opts = crate::generate::Options::default()
         .with_common_module(common_module)
         .with_defmt(defmt)
-        .with_skip_no_std(args.skip_no_std);
+        .with_skip_no_std(args.skip_no_std)
+        .with_arch(arch.into());
     Ok(opts)
 }
