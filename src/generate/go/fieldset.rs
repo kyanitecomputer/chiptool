@@ -1,13 +1,24 @@
 use anyhow::Result;
 use crate::ir::*;
-use super::camel_case;
+use super::{camel_case, go_comment};
+
+/// Collapse a potentially multi-line string to a single line for use in
+/// Go const blocks, where multi-line `//` comments require each line to
+/// be individually prefixed (and the const block syntax makes that awkward).
+fn single_line(s: &str) -> String {
+    s.lines()
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
 
 /// Render a fieldset as Go const block (bit positions and masks)
 pub fn render(ir: &IR, fieldset: &FieldSet, fs_name: &str) -> Result<String> {
     let mut out = String::new();
 
     if let Some(desc) = &fieldset.description {
-        out.push_str(&format!("// {} {}\n", fs_name, desc));
+        out.push_str(&go_comment(&format!("{} {}", fs_name, single_line(desc))));
     }
     out.push_str("const (\n");
 
@@ -18,7 +29,7 @@ pub fn render(ir: &IR, fieldset: &FieldSet, fs_name: &str) -> Result<String> {
         let fname = camel_case(&field.name);
 
         if let Some(desc) = &field.description {
-            out.push_str(&format!("    // {} {}\n", fname, desc));
+            out.push_str(&format!("    // {} {}\n", fname, single_line(desc)));
         }
         out.push_str(&format!("    {}{}Pos = {}\n", name, fname, bit_offset));
         out.push_str(&format!("    {}{}Msk = 0x{:x} << {}\n", name, fname, mask, bit_offset));
