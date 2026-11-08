@@ -23,7 +23,7 @@ pub fn render_device_x(_ir: &IR, d: &Device, arch: &RustArch) -> Result<String> 
             }
             Ok(device_x)
         }
-        RustArch::RiscV => Ok(String::new()),
+        RustArch::RiscV | RustArch::Bare => Ok(String::new()),
     }
 }
 
@@ -99,6 +99,7 @@ fn render_interrupt_enum(opts: &super::Options, d: &Device) -> Result<TokenStrea
                 pub use Interrupt as interrupt;
             }
         }
+        RustArch::Bare => TokenStream::new(),
     };
 
     Ok(quote! {
@@ -175,6 +176,7 @@ fn render_interrupt_trait_impl(opts: &super::Options, d: &Device) -> TokenStream
                 }
             }
         }
+        RustArch::Bare => TokenStream::new(),
     }
 }
 
@@ -265,6 +267,7 @@ fn render_vector_table(
                 }
             })
         }
+        RustArch::Bare => Ok(TokenStream::new()),
     }
 }
 

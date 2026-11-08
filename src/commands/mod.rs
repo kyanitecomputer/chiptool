@@ -33,6 +33,8 @@ pub enum RustArch {
     CortexM,
     /// RISC-V (riscv / riscv_rt, PLIC external interrupt handlers)
     RiscV,
+    /// No interrupt runtime, only the Interrupt enum
+    Bare,
 }
 
 impl From<RustArch> for crate::generate::RustArch {
@@ -40,6 +42,7 @@ impl From<RustArch> for crate::generate::RustArch {
         match a {
             RustArch::CortexM => crate::generate::RustArch::CortexM,
             RustArch::RiscV => crate::generate::RustArch::RiscV,
+            RustArch::Bare => crate::generate::RustArch::Bare,
         }
     }
 }

@@ -101,6 +101,10 @@ pub enum RustArch {
     /// RISC-V — uses `riscv` / `riscv_rt`, exports
     /// `_external_interrupt_handlers` for PLIC dispatch.
     RiscV,
+    /// No interrupt runtime — only the `Interrupt` enum. For application
+    /// cores whose firmware drives its own interrupt controller (VIC, GIC,
+    /// AIA) and pulls in neither `cortex_m` nor `riscv`.
+    Bare,
 }
 
 #[derive(Debug)]
